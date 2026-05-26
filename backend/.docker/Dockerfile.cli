@@ -1,0 +1,6 @@
+# Dev-only PHP CLI image used to run composer + artisan when PHP isn't installed on the host.
+# Builds in seconds, no production use intended.
+FROM composer:2
+RUN apk add --no-cache mysql-client \
+ && docker-php-ext-install pdo_mysql bcmath
+WORKDIR /app
