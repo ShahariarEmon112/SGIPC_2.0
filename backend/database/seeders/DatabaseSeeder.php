@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             BlogCommentSeeder::class,
             BlogLikeSeeder::class,
             CommentReportSeeder::class,
+            LeaderboardSeeder::class,
+            ResourceSeeder::class,
         ]);
     }
 }

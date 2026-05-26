@@ -14,8 +14,10 @@ const links = [
   { href: "/events", label: "Events" },
   { href: "/contest", label: "Contests" },
   { href: "/achievements", label: "Achievements" },
+  { href: "/leaderboard", label: "Leaderboard" },
   { href: "/gallery", label: "Gallery" },
   { href: "/blog", label: "Blog" },
+  { href: "/resources", label: "Resources" },
 ];
 
 export function Navbar() {
@@ -80,6 +82,9 @@ export function Navbar() {
                   <Shield className="h-3 w-3" /> Admin
                 </Link>
               )}
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <Link href="/profile">Profile</Link>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
