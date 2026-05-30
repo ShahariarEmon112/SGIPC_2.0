@@ -75,7 +75,8 @@ class UserSeeder extends Seeder
                     'role' => 'client',
                     'status' => 'pending',
                     'email_verified_at' => null,
-                    'email_verification_token' => bin2hex(random_bytes(32)),
+                    'email_verification_code' => str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+                    'email_verification_code_expires_at' => now()->addMinutes(15),
                 ]
             );
         }

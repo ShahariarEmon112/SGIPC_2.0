@@ -28,7 +28,8 @@ use Illuminate\Support\Facades\Route;
 
 // ───────────────────────── Public ─────────────────────────
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/settings', [SettingsController::class, 'index']);

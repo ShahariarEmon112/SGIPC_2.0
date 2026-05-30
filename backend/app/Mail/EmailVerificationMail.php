@@ -14,23 +14,20 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public User $user, public string $token) {}
+    public function __construct(public User $user, public string $code) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Verify your SGIPC email');
+        return new Envelope(subject: 'Your SGIPC verification code');
     }
 
     public function content(): Content
     {
-        $frontend = rtrim(config('app.frontend_url') ?? env('FRONTEND_URL', 'http://localhost:3000'), '/');
-        $verifyUrl = $frontend.'/verify-email?token='.urlencode($this->token);
-
         return new Content(
             view: 'emails.verify',
             with: [
                 'name' => $this->user->name,
-                'verifyUrl' => $verifyUrl,
+                'code' => $this->code,
             ],
         );
     }

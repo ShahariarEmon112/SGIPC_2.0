@@ -24,20 +24,23 @@ class User extends Authenticatable
         'status',
         'rejection_reason',
         'email_verified_at',
-        'email_verification_token',
+        'email_verification_code',
+        'email_verification_code_expires_at',
         'profile_photo_url',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
-        'email_verification_token',
+        'email_verification_code',
+        'email_verification_code_expires_at',
     ];
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_verification_code_expires_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

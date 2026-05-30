@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,7 +35,8 @@ type Step1 = z.infer<typeof step1Schema>;
 type Step2 = z.infer<typeof step2Schema>;
 
 export default function RegisterPage() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const router = useRouter();
+  const [step, setStep] = useState<1 | 2>(1);
   const [step1Data, setStep1Data] = useState<Step1 | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -58,8 +60,8 @@ export default function RegisterPage() {
     try {
       const res = await api.post("/register", { ...step1Data, ...data });
       if (res.data?.success) {
-        toast.success("Account created. Check your email.");
-        setStep(3);
+        toast.success("Account created. Check your email for the code.");
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
       } else {
         toast.error(res.data?.message ?? "Registration failed");
       }
@@ -80,18 +82,14 @@ export default function RegisterPage() {
   return (
     <Card className="w-full max-w-md animate-fade-in">
       <CardHeader>
-        <CardTitle>{step === 3 ? "Check your email" : "Join SGIPC"}</CardTitle>
+        <CardTitle>Join SGIPC</CardTitle>
         <CardDescription>
-          {step === 3
-            ? "We sent a verification link to your inbox."
-            : `Step ${step} of 2 — ${step === 1 ? "Personal info" : "Account setup"}`}
+          {`Step ${step} of 2 — ${step === 1 ? "Personal info" : "Account setup"}`}
         </CardDescription>
-        {step !== 3 && (
-          <div className="flex gap-2 pt-2" aria-hidden>
-            <div className={`h-1 flex-1 rounded ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
-            <div className={`h-1 flex-1 rounded ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
-          </div>
-        )}
+        <div className="flex gap-2 pt-2" aria-hidden>
+          <div className={`h-1 flex-1 rounded ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
+          <div className={`h-1 flex-1 rounded ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -147,29 +145,12 @@ export default function RegisterPage() {
           </form>
         )}
 
-        {step === 3 && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Click the verification link in the email we sent to confirm your address. After
-              verification, an SGIPC admin will review your application.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Don't see it? Check your spam folder, or wait a minute and refresh.
-            </p>
-            <Link href="/login" className="inline-block text-sm text-primary hover:underline">
-              Go to login →
-            </Link>
-          </div>
-        )}
-
-        {step !== 3 && (
-          <p className="pt-2 text-center text-xs text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Log in
-            </Link>
-          </p>
-        )}
+        <p className="pt-2 text-center text-xs text-muted-foreground">
+          Already have an account?{" "}
+          <Link href="/login" className="text-primary hover:underline">
+            Log in
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );

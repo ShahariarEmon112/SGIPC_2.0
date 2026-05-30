@@ -17,10 +17,12 @@ class AuthController extends Controller
 {
     use ApiResponse;
 
+    private const CODE_TTL_MINUTES = 15;
+
     public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $token = bin2hex(random_bytes(32));
+        $code = $this->generateCode();
 
         $user = User::create([
             'name' => $data['name'],
@@ -31,45 +33,85 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
             'role' => 'client',
             'status' => 'pending',
-            'email_verification_token' => $token,
+            'email_verification_code' => $code,
+            'email_verification_code_expires_at' => now()->addMinutes(self::CODE_TTL_MINUTES),
         ]);
 
-        Mail::to($user->email)->queue(new EmailVerificationMail($user, $token));
+        Mail::to($user->email)->queue(new EmailVerificationMail($user, $code));
 
         return $this->ok(
-            ['user_id' => $user->id],
-            'Registration successful. Check your email to verify your address.'
+            ['user_id' => $user->id, 'email' => $user->email],
+            'Registration successful. Check your email for the 6-digit verification code.'
         );
     }
 
     public function verifyEmail(Request $request): JsonResponse
     {
-        $token = (string) $request->query('token', '');
-        if ($token === '') {
-            return $this->fail('Missing verification token.', ['code' => 'missing_token'], 422);
-        }
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'code' => ['required', 'string', 'size:6'],
+        ]);
 
-        $user = User::where('email_verification_token', $token)->first();
+        $user = User::where('email', $data['email'])->first();
         if (! $user) {
-            return $this->fail('Invalid or expired verification token.', ['code' => 'invalid_token'], 422);
+            return $this->fail('No account found for that email.', ['code' => 'unknown_email'], 404);
         }
 
         if ($user->email_verified_at) {
-            return $this->ok(
-                ['already_verified' => true],
-                'Email already verified.'
-            );
+            return $this->ok(['already_verified' => true], 'Email already verified.');
+        }
+
+        if (! $user->email_verification_code || ! $user->email_verification_code_expires_at) {
+            return $this->fail('No active verification code. Request a new one.', ['code' => 'no_code'], 422);
+        }
+
+        if (now()->isAfter($user->email_verification_code_expires_at)) {
+            return $this->fail('Verification code expired. Request a new one.', ['code' => 'code_expired'], 422);
+        }
+
+        if (! hash_equals($user->email_verification_code, $data['code'])) {
+            return $this->fail('Invalid verification code.', ['code' => 'invalid_code'], 422);
         }
 
         $user->forceFill([
             'email_verified_at' => now(),
-            'email_verification_token' => null,
+            'email_verification_code' => null,
+            'email_verification_code_expires_at' => null,
         ])->save();
 
         return $this->ok(
             ['status' => $user->status],
             'Email verified. Your account is pending admin approval.'
         );
+    }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        $data = $request->validate(['email' => ['required', 'email']]);
+
+        $user = User::where('email', $data['email'])->first();
+        if (! $user) {
+            return $this->fail('No account found for that email.', ['code' => 'unknown_email'], 404);
+        }
+
+        if ($user->email_verified_at) {
+            return $this->ok(['already_verified' => true], 'Email already verified.');
+        }
+
+        $code = $this->generateCode();
+        $user->forceFill([
+            'email_verification_code' => $code,
+            'email_verification_code_expires_at' => now()->addMinutes(self::CODE_TTL_MINUTES),
+        ])->save();
+
+        Mail::to($user->email)->queue(new EmailVerificationMail($user, $code));
+
+        return $this->ok(null, 'A new verification code has been sent.');
+    }
+
+    private function generateCode(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 
     public function login(LoginRequest $request): JsonResponse
