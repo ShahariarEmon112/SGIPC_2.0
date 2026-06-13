@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function diff(target: Date) {
   const ms = Math.max(0, target.getTime() - Date.now());
@@ -15,7 +15,8 @@ function diff(target: Date) {
 }
 
 export function CountdownTimer({ target }: { target: string | Date }) {
-  const targetDate = typeof target === "string" ? new Date(target) : target;
+  const targetKey = typeof target === "string" ? target : target.toISOString();
+  const targetDate = useMemo(() => new Date(targetKey), [targetKey]);
   const [t, setT] = useState<ReturnType<typeof diff> | null>(null);
 
   useEffect(() => {

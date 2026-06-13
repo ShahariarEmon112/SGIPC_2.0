@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Trophy, Calendar, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MatrixRain } from "@/components/public/MatrixRain";
 import { Typewriter } from "@/components/public/Typewriter";
 import { CountdownTimer } from "@/components/public/CountdownTimer";
 import { SectionHeader } from "@/components/public/SectionHeader";
@@ -30,6 +29,9 @@ export default async function HomePage() {
   const ctaPrimary = settings?.hero_cta_primary ?? "Join Now";
   const ctaSecondary = settings?.hero_cta_secondary ?? "Learn More";
 
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const heroImage = apiBase.replace(/\/api\/?$/, "") + "/seed-photos/photo3.jpg";
+
   const upcoming = contests?.upcoming?.[0];
   const topAchievements = (achievements ?? []).slice(0, 3);
   const topBlogs = (blogs?.data ?? []).slice(0, 3);
@@ -40,8 +42,23 @@ export default async function HomePage() {
       {/* ───────────────────── Hero ───────────────────── */}
       <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden">
         <div className="absolute inset-0">
-          <MatrixRain />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={heroImage}
+            alt=""
+            aria-hidden
+            className="h-full w-full object-cover grayscale brightness-75 contrast-110"
+          />
+          <div className="absolute inset-0 bg-primary/15 mix-blend-screen" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/75 to-background" />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,212,255,0.6) 3px)",
+            }}
+          />
         </div>
 
         <div className="container relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-20 text-center">
